@@ -12,14 +12,14 @@ steps:
   displayName: 'Log in to Azure Container Registry'
   inputs:
     command: 'login'
-    containerRegistry: '<Azure-Container-Registry-Service-Connection>'  # Replace with your ACR service connection
+    containerRegistry: 'balqisacr.azurecr.io'  # Replace with your ACR service connection
 
 # Step 2: Build Docker Image
 - task: Docker@2
   displayName: 'Build Docker Image'
   inputs:
     command: 'build'
-    dockerfile: '**/Dockerfile'  # Path to your Dockerfile (adjust if needed)
+    dockerfile: 'dockerfile'  # Dockerfile is in the root of project  
     tags: 'latest'
     repository: 'balqisacr.azurecr.io/web-app'  # Your ACR URL and image name
 
@@ -35,8 +35,8 @@ steps:
 - task: AzureWebAppContainer@1
   displayName: 'Deploy Docker image to Azure Web App'
   inputs:
-    azureSubscription: '<Azure-DevOps-Service-Connection>'  # Azure Service Connection name
-    appName: '<your-web-app-name>'  # Replace with your Azure Web App name
-    containerRegistry: '<Azure-Container-Registry-Service-Connection>'  # ACR service connection
+    azureSubscription: 'MyAzureServiceConnection'  # Azure Service Connection name
+    appName: 'my-web-app'  # Replace with your Azure Web App name
+    containerRegistry: 'balqisacr.azurecr.io'  # ACR service connection
     imageName: 'balqisacr.azurecr.io/web-app:latest'  # Your ACR image name with tag
     tag: 'latest'
