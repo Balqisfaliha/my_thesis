@@ -36,7 +36,7 @@ steps:
   displayName: 'Deploy Docker image to Azure Web App'
   inputs:
     azureSubscription: 'MyAzureServiceConnection'  # Azure Service Connection name
-    appName: 'my-web-app'  # Replace with your Azure Web App name
+    appName: 'my-web-apps'  # Replace with your Azure Web App name
     containerRegistry: 'balqisacr.azurecr.io'  # ACR service connection
     imageName: 'balqisacr.azurecr.io/web-app:latest'  # Your ACR image name with tag
     tag: 'latest'
