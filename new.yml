@@ -7,22 +7,23 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  dockerfilePath: '**/Dockerfile' #path to docker in repo
-  imageRepository: 'web-app' #docker image within acr name
-  containerRegistry: 'balqisacr.azurecr.io'  # Your ACR name
+  dockerfilePath: '**/Dockerfile'
+  imageRepository: 'web-app'
+  acrServiceConnection: 'balqis-acr-connection'  # ACR SERVICE CONN NAME (renamed for clarity)
+  acrLoginServer: 'balqisacr.azurecr.io'  # FULL ACR URL for deploy path
   imageTag: 'latest'
-  buildIdTag: '$(Build.BuildId)'  # Unique per run
-  azureSubscription: 'Azure-service-connection'  # Your Azure connection name
-  appName: 'my-web-apps'  # Update to match Azure
+  buildIdTag: '$(Build.BuildId)'
+  azureSubscription: 'Azure-service-connection'
+  appName: 'my-web-apps'
 
 steps:
-- checkout: self  # Safe explicit checkout
+- checkout: self
 
 - task: Docker@2
   displayName: 'Login to ACR'
   inputs:
     command: 'login'
-    containerRegistry: '$(containerRegistry)'  # Direct ACR login
+    containerRegistry: '$(acrServiceConnection)'  # Service conn name
 
 - task: Docker@2
   displayName: 'Build Image'
@@ -38,8 +39,8 @@ steps:
   displayName: 'Push Image'
   inputs:
     command: 'push'
-    containerRegistry: '$(containerRegistry)'
-    repository: '$(imageRepository)'  # Just repo name (ACR prefixes auto)
+    containerRegistry: '$(acrServiceConnection)'
+    repository: '$(imageRepository)'  # web-app (ACR prefixes: balqisacr.azurecr.io/web-app)
     tags: |
       $(imageTag)
       $(buildIdTag)
@@ -49,7 +50,8 @@ steps:
   inputs:
     azureSubscription: '$(azureSubscription)'
     appName: '$(appName)'
-    containers: '$(containerRegistry)/$(imageRepository):$(imageTag)'
+    containers: '$(acrLoginServer)/$(imageRepository):$(imageTag)'  # balqisacr.azurecr.io/web-app:latest
+`
 
 
 # Test Steps
