@@ -1,0 +1,64 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  dockerfilePath: '**/Dockerfile' #path to docker in repo
+  imageRepository: 'web-app' #docker image within acr name
+  containerRegistry: 'balqisacr.azurecr.io'  # Your ACR name
+  imageTag: 'latest'
+  buildIdTag: '$(Build.BuildId)'  # Unique per run
+  azureSubscription: 'Azure-service-connection'  # Your Azure connection name
+  appName: 'my-web-apps'  # Update to match Azure
+
+steps:
+- checkout: self  # Safe explicit checkout
+
+- task: Docker@2
+  displayName: 'Login to ACR'
+  inputs:
+    command: 'login'
+    containerRegistry: '$(containerRegistry)'  # Direct ACR login
+
+- task: Docker@2
+  displayName: 'Build Image'
+  inputs:
+    command: 'build'
+    dockerfile: '$(dockerfilePath)'
+    buildContext: '.'
+    tags: |
+      $(imageTag)
+      $(buildIdTag)
+
+- task: Docker@2
+  displayName: 'Push Image'
+  inputs:
+    command: 'push'
+    containerRegistry: '$(containerRegistry)'
+    repository: '$(imageRepository)'  # Just repo name (ACR prefixes auto)
+    tags: |
+      $(imageTag)
+      $(buildIdTag)
+
+- task: AzureWebAppContainer@1
+  displayName: 'Deploy to Web App'
+  inputs:
+    azureSubscription: '$(azureSubscription)'
+    appName: '$(appName)'
+    containers: '$(containerRegistry)/$(imageRepository):$(imageTag)'
+
+
+# Test Steps
+# Enable ACR admin user.
+# Ensure Azure service conn exists (for deploy only).
+# Commit/push—YAML runs automatically.
+# Check pipeline logs; image appears in ACR > Repositories.
+
+# Yes, the Azure service connection is created in Azure DevOps Project Settings > Service connections > New > Azure Resource Manager > choosing your subscription and RG (scopes for Web App deploy).
+# Yes, containerRegistry is your full ACR login server (e.g., 'balqisacr.azurecr.io' from Azure Portal > ACR > Overview).
+# Yes, appName is the exact name you set for your Web App (e.g., 'my-web-app' from Portal > Web Apps).
+# Yes, imageRepository is the Docker repo name inside ACR (e.g., 'web-app'—like a folder for your images).
