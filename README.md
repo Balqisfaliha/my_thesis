@@ -1,5 +1,5 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+I'm writing a thesis about deploying a simple web appusing azure devops and nginx
 
 # Getting Started
 TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
