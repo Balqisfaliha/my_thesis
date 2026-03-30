@@ -1,42 +1,69 @@
 trigger:
   branches:
     include:
-      - main  # Trigger on push to the main branch
+      - main
 
 pool:
-  vmImage: 'ubuntu-latest'  # Using the latest Ubuntu image for the build
+  vmImage: 'ubuntu-latest'
 
 steps:
-# Step 1: Log in to Azure Container Registry (ACR)
+# Step 1: Log in to Azure Container Registry \
 - task: Docker@2
-  displayName: 'Log in to Azure Container Registry'
+  displayName: 'Log in to ACR'
   inputs:
     command: 'login'
-    containerRegistry: 'balqisacr.azurecr.io'  # Replace with your ACR service connection
+    containerRegistry: 'your-acr-service-connection'  # Ganti dengan nama service connection ACR Anda
 
-# Step 2: Build Docker Image
+# Step 2: Build Docker Image 
 - task: Docker@2
   displayName: 'Build Docker Image'
   inputs:
     command: 'build'
-    dockerfile: 'dockerfile'  # Dockerfile is in the root of project  
-    tags: 'latest'
-    repository: 'balqisacr.azurecr.io/web-app'  # Your ACR URL and image name
-
-# Step 3: Push Docker Image to Azure Container Registry (ACR)
-- task: Docker@2
-  displayName: 'Push Docker Image to ACR'
-  inputs:
-    command: 'push'
-    repository: 'balqisacr.azurecr.io/web-app'  # Your ACR URL and image name
-    tags: 'latest'
-
-# Step 4: Deploy Docker Image to Azure Web App
+    dockerfile: '**/Dockerfile'
+    buildContext: '.'
+    tags: |
+      latest
+      
+# Step 4: Deploy to Azure Web App 
 - task: AzureWebAppContainer@1
-  displayName: 'Deploy Docker image to Azure Web App'
+  displayName: 'Deploy to Azure Web App'
   inputs:
-    azureSubscription: 'Azure-service-connection'  # Azure Service Connection name
-    appName: 'my-web-apps'  # Replace with your Azure Web App name
-    containerRegistry: 'balqisacr.azurecr.io'  # ACR service connection
-    imageName: 'balqisacr.azurecr.io/web-app:latest'  # Your ACR image name with tag
-    tag: 'latest'
+    azureSubscription: 'Azure-service-connection' # Ganti dengan nama service connection Azure Anda
+    appName: 'my-web-apps' # Ganti dengan nama Web App Anda
+    containers: 'balqisacr.azurecr.io/web-app:latest' # Ganti dengan alamat image lengkap di ACR Anda
+    # The 'containerRegistry' input for this task is NOT needed if you use the full address in 'containers'
+
+
+# ==============================================
+# PIPELINE TRIGGER
+# ==============================================
+trigger:
+  branches:
+    include:
+      - main  # The pipeline will run automatically on any push to the 'main' branch
+
+# ==============================================
+# AGENT SELECTION
+# ==============================================
+pool:
+  vmImage: 'ubuntu-latest'  # Uses a clean, Microsoft-hosted Ubuntu virtual machine to run the pipeline
+
+# ==============================================
+# VARIABLES
+# ==============================================
+variables:
+  
+  # Path to the Dockerfile in your repository
+  dockerfilePath: '**/Dockerfile'
+  
+  # The name you want for your Docker image
+  imageRepository: 'my-web-app'
+  
+  # The full address of your Azure Container Registry (ACR)
+  containerRegistry: 'balqisacr.azurecr.io'
+  
+  # Tags the image with both 'latest' and the unique build ID
+  imageTag: 'latest'
+  buildIdTag: 
+    # Tells the task where to find the Dockerfile
+    dockerfile: Dockerfile
